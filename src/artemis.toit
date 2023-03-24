@@ -6,6 +6,12 @@ import .api.artemis
 
 service_/ArtemisService? ::= (ArtemisClient).open --if_absent=: null
 
+/**
+Returns the Artemis version.
+
+Throws an exception if the current container is not
+  managed by Artemis.
+*/
 version -> string:
   service := service_
   if not service: throw "Not running on Artemis"
