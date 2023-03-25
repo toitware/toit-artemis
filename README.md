@@ -19,6 +19,6 @@ and use it from your programs:
 import artemis
 
 main:
-  if artemis.is_enabled:
+  if artemis.available:
     print "Running on Artemis $artemis.version"
 ```

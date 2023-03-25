@@ -8,18 +8,15 @@ service_/api.ArtemisService? ::= (api.ArtemisClient).open
     --if_absent=: null
 
 /**
-Whether the current container is managed by Artemis.
+Whether the Artemis service is available.
 */
-is_enabled -> bool:
+available -> bool:
   return service_ != null
 
 /**
-Returns the Artemis version.
-
-Throws an exception if the current container is not
-  managed by Artemis.
+Returns the version of the Artemis service.
 */
 version -> string:
   service := service_
-  if not service: throw "Not managed by Artemis"
+  if not service: throw "Artemis unavailable"
   return service.version
