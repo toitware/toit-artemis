@@ -2,9 +2,16 @@
 // Use of this source code is governed by an MIT-style license that can be
 // found in the LICENSE file.
 
-import .api.artemis
+import .api as api
 
-service_/ArtemisService? ::= (ArtemisClient).open --if_absent=: null
+service_/api.ArtemisService? ::= (api.ArtemisClient).open
+    --if_absent=: null
+
+/**
+Whether the current container is managed by Artemis.
+*/
+is_enabled -> bool:
+  return service_ != null
 
 /**
 Returns the Artemis version.
@@ -14,5 +21,5 @@ Throws an exception if the current container is not
 */
 version -> string:
   service := service_
-  if not service: throw "Not running on Artemis"
+  if not service: throw "Not managed by Artemis"
   return service.version
