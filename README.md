@@ -10,7 +10,7 @@ managed by Artemis.
 Install this package using:
 
 ``` sh
-toit.pkg install artemis
+toit.pkg install github.com/toitware/toit-artemis
 ```
 
 and use it from your programs:
