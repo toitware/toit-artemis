@@ -20,3 +20,13 @@ class ContainerCurrent implements artemis.Container:
   trigger -> artemis.Trigger?:
     encoded-trigger := client_.container-current-trigger
     return artemis.Trigger.decode encoded-trigger
+
+  triggers -> List:
+    encoded-triggers := client_.container-current-triggers
+    return encoded-triggers.map: artemis.Trigger.decode it
+
+  set-next-start-triggers triggers/List? -> none:
+    encoded-triggers := triggers
+        ? triggers.map: | trigger/artemis.Trigger | trigger.encode
+        : null
+    client_.container-current-set-triggers encoded-triggers
