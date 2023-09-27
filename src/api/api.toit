@@ -8,8 +8,8 @@ import ..artemis as artemis  // For toitdoc.
 interface ArtemisService:
   static SELECTOR ::= ServiceSelector
       --uuid="61d82c0b-7009-4e16-b248-324de4e25f9B"
-      --major=0
-      --minor=7
+      --major=1
+      --minor=0
 
   /** The mode used by controllers that want to go online. */
   static CONTROLLER-MODE-ONLINE ::= 0
@@ -46,6 +46,12 @@ interface ArtemisService:
 
   container-current-trigger -> int
   static CONTAINER-CURRENT-TRIGGER-INDEX /int ::= 10
+
+  container-current-triggers -> List?
+  static CONTAINER-CURRENT-TRIGGERS-INDEX /int ::= 11
+
+  container-current-set-triggers new-triggers/List? -> none
+  static CONTAINER-CURRENT-SET-TRIGGERS-INDEX /int ::= 12
 
   controller-open --mode/int -> int
   static CONTROLLER-OPEN-INDEX /int ::= 6
@@ -86,6 +92,12 @@ class ArtemisClient extends ServiceClient
 
   container-current-trigger -> int:
     return invoke_ ArtemisService.CONTAINER-CURRENT-TRIGGER-INDEX null
+
+  container-current-triggers -> List:
+    return invoke_ ArtemisService.CONTAINER-CURRENT-TRIGGERS-INDEX null
+
+  container-current-set-triggers new-triggers/List -> none:
+    invoke_ ArtemisService.CONTAINER-CURRENT-SET-TRIGGERS-INDEX new-triggers
 
   controller-open --mode/int -> int:
     return invoke_ ArtemisService.CONTROLLER-OPEN-INDEX mode

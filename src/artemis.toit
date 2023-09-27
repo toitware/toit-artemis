@@ -95,20 +95,36 @@ class Trigger:
 
   constructor .kind:
 
-  static encode kind/int --pin/int=0 -> int:
-    return pin << 8 | kind
+  static encode kind/int -> int:
+    return kind
+
+  static encode-pin pin/int --level/int -> int:
+    return pin << 8 | level << 7 | KIND_PIN
+
+  static encode-touch pin/int -> int:
+    return pin << 8 | KIND_TOUCH
+
+  static encode-interval interval/Duration -> int:
+    return interval.in-ms << 5 | KIND_INTERVAL
+
+  static encode-delayed wakeup-time/int -> int:
+    return wakeup-time << 5 | KIND_RESTART
 
   static decode value/int -> Trigger?:
     if value == -1: return null
-    kind := value & 0xff
-    if kind == KIND_PIN: return TriggerPin (value >> 8)
+    kind := value & 0x1F
+    if kind == KIND_PIN: return TriggerPin (value >> 8) --level=(value >> 7 & 1)
     if kind == KIND_TOUCH: return TriggerTouch (value >> 8)
+    if kind == KIND_INTERVAL: return TriggerInterval (Duration --ms=(value >> 5))
+    if kind == KIND_RESTART: return TriggerRestart value >> 5
     return Trigger kind
+
+  encode -> int:
+    return Trigger.encode kind
 
   stringify -> string:
     if kind == KIND_BOOT: return "Trigger - boot"
     if kind == KIND_INSTALL: return "Trigger - install"
-    if kind == KIND_INTERVAL: return "Trigger - interval"
     if kind == KIND_RESTART: return "Trigger - restart"
     unreachable
 
@@ -117,11 +133,15 @@ An external-pin trigger.
 */
 class TriggerPin extends Trigger:
   pin/int
-  constructor .pin:
+  level/int
+  constructor .pin --.level:
     super Trigger.KIND_PIN
 
+  encode -> int:
+    return Trigger.encode-pin pin --level=level
+
   stringify -> string:
-    return "Trigger - pin $(pin)"
+    return "Trigger - pin $pin-$level"
 
 /**
 A touch-event trigger.
@@ -131,8 +151,34 @@ class TriggerTouch extends Trigger:
   constructor .pin:
     super Trigger.KIND_TOUCH
 
+  encode -> int:
+    return Trigger.encode-touch pin
+
   stringify -> string:
-    return "Trigger - touch $(pin)"
+    return "Trigger - touch $pin"
+
+class TriggerInterval extends Trigger:
+  interval/Duration
+  constructor .interval:
+    super Trigger.KIND_INTERVAL
+
+  encode -> int:
+    return Trigger.encode-interval interval
+
+  stringify -> string:
+    return "Trigger - interval $interval"
+
+class TriggerRestart extends Trigger:
+  remaining-ms/int
+  constructor .remaining-ms:
+    super Trigger.KIND_RESTART
+
+  encode -> int:
+    return Trigger.encode-delayed remaining-ms
+
+  stringify -> string:
+    if remaining-ms == 0: return "Trigger - restart"
+    return "Trigger - restart in $(remaining-ms)ms"
 
 /**
 A container is a schedulable unit of execution that runs
@@ -177,6 +223,24 @@ interface Container:
   Returns null if the trigger is unknown.
   */
   trigger -> Trigger?
+
+  /**
+  The triggers that are installed for this container.
+
+  Returns a list of $Trigger objects.
+  */
+  triggers -> List
+
+  /**
+  Updates the triggers to the given $triggers list.
+
+  These triggers are active until the next time the container is
+    executed, or until the device is reset.
+
+  If $triggers is set to null, then the original triggers are
+    restored.
+  */
+  set-next-start-triggers triggers/List? -> none
 
 /**
 A channel is a cyclic datastructure that persists a sequence
